@@ -2,31 +2,41 @@ import { StatusBar } from 'expo-status-bar';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ImageBackground, StyleSheet, Alert } from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
 
-const App = () => {
-  const [monto, setMonto] = useState(''); 
+const CierreCaja = () => {
+  const [montoFinal, setMontoFinal] = useState(''); 
   const navigation = useNavigation();
 
-  const handleMontoChange = (input) => {
+  const confirmarMontoFinal = () => {
     // Solo actualiza el estado si la entrada es un número o una cadena vacía
-    const numericInput = input.replace(/[^0-9]/g, ''); // Reemplaza cualquier carácter que no sea un número
-    setMonto(numericInput);
+    const numericInput = montoFinal.replace(/[^0-9]/g, ''); // Reemplaza cualquier carácter que no sea un número
+    setMontoFinal(numericInput);
   };
   const confirmarMonto = () => {
     Alert.alert(
-        "Confirmar Monto",
-        `¿Está seguro de que desea ingresar $${monto} como monto inicial?`,
+        "Confirmar Monto Final",
+        `¿Está seguro que desea cerrar la caja con $${montoFinal} como monto final?`,
         [
-            {
-                text: "Cancelar",
-                style: "cancel"
-            },
-            {
-                text: "Confirmar",
-                onPress: () => navigation.navigate('Caja') 
-            }
-        ]
+              { text: "Cancelar", style: "cancel" },
+              { text: "Confirmar", onPress: guardarMontoFinal }
+        ],
     );
+  };
+
+  const guardarMontoFinal = async () => {
+    try {
+      await addDoc(collection(db, 'cierre_caja'), {
+        monto_final: montoFinal,
+        fecha_cierre: new Date().toISOString()
+      });
+      Alert.alert('Éxito', 'Monto final guardado con éxito');
+      navigation.navigate('Caja', { montoFinal: montoFinal }); // Redirige a la pantalla 'Caja' con el monto final
+    } catch (error) {
+      console.error("Error al guardar el monto final: ", error);
+      Alert.alert('Error', 'No se pudo guardar el monto final');
+    }
   };
 
   return (
@@ -43,9 +53,9 @@ const App = () => {
             <Text style={styles.label}>Monto Recaudado</Text>
             <TextInput
               style={styles.input}
-              placeholder="Escribe el monto recaudado"
-              value={monto}
-              onChangeText={handleMontoChange} // Llama a la función de manejo personalizada
+              placeholder="Ingrese el monto de cierre de caja"
+              value={montoFinal}
+              onChangeText={setMontoFinal}
               keyboardType="numeric"
       />
           </View>
@@ -60,7 +70,7 @@ const App = () => {
             <TouchableOpacity
               style={[styles.boton, styles.botonCerrar]}
               onPress={confirmarMonto}>
-              <Text style={styles.textoBoton}>Aceptar</Text>
+              <Text style={styles.textoBoton}>Cerrar Caja</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -137,4 +147,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default App;
+export default CierreCaja;

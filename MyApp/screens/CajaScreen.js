@@ -1,18 +1,54 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
 import { Table, Row, Rows } from 'react-native-table-component';
-import { useNavigation } from '@react-navigation/native';
-
-
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 export default function CajaScreen() {
     const navigation = useNavigation();
-
-    const [datos, setDatos] = useState ([['---', '---', '---', '---', '---', '---']]);
-    const [montoInicial, setMontoInicial] = useState('100');
+    const route = useRoute();
+    const [datos, setDatos] = useState([['---', '---', '---', '---', '---', '---']]);
+    const [montoInicial, setMontoInicial] = useState('');
+    const [montoFinal, setMontoFinal] = useState('');
 
     const encabezado = ['ID_caja', 'Fecha_apertura', 'Fecha_cierre', 'Monto_inicial', 'Monto_Recaudado', 'Monto_total'];
+
+    useEffect(() => {
+        // Actualiza el monto inicial si está presente
+        if (route.params?.montoInicial) {
+            setMontoInicial(route.params.montoInicial);
+
+            const nuevoDato = [
+                '1', // ID_caja
+                new Date().toLocaleDateString(), // Fecha_apertura
+                '---', // Fecha_cierre (se completará al cerrar la caja)
+                route.params.montoInicial, // Monto_inicial
+                '0', // Monto_Recaudado
+                route.params.montoInicial // Monto_total (igual al monto inicial al abrir)
+            ];
+            setDatos((prevDatos) => [...prevDatos, nuevoDato]);
+        }
+
+        // Actualiza el monto final si está presente
+        if (route.params?.montoFinal) {
+            setMontoFinal(route.params.montoFinal);
+
+            // Actualiza la última fila de la tabla con la fecha de cierre y el monto final
+            setDatos((prevDatos) => {
+                const ultimoIndice = prevDatos.length - 1;
+                const datosActualizados = [...prevDatos];
+                datosActualizados[ultimoIndice] = [
+                    '1', // ID_caja
+                    datosActualizados[ultimoIndice][1], // Fecha_apertura original
+                    new Date().toLocaleDateString(), // Fecha_cierre actual
+                    datosActualizados[ultimoIndice][3], // Monto_inicial original
+                    route.params.montoFinal - datosActualizados[ultimoIndice][3], // Monto_Recaudado
+                    route.params.montoFinal // Monto_total
+                ];
+                return datosActualizados;
+            });
+        }
+    }, [route.params?.montoInicial, route.params?.montoFinal]);
 
     return (
         <ImageBackground 
@@ -33,7 +69,6 @@ export default function CajaScreen() {
                     <Text style={styles.buttonText}>Cierre de Caja</Text>
                 </TouchableOpacity>
             </View>
-
             <View style={styles.contenedor2}>
                 <TouchableOpacity style={styles.buttonModify} onPress={() => navigation.navigate('Modificar')}>
                     <Text style={styles.buttonText}>Modificar</Text>
@@ -56,7 +91,6 @@ export default function CajaScreen() {
     );
 }
 
-
 const styles = StyleSheet.create({
     fondo: {
         flex: 1,
@@ -67,27 +101,18 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center', 
     },
-
     titulo: {
         fontSize: 30,
         color: 'black',
         fontWeight: 'bold',
     },
-
     contenedor: {
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 10,
     },
-
-    texto: {
-        fontSize: 24,
-        color: 'white',
-        fontWeight: 'bold',
-    },
-
     buttonOpen: {
-        backgroundColor: 'green', // Apertura de Caja
+        backgroundColor: 'green',
         alignItems: 'center',
         padding: 15,
         borderRadius: 10,
@@ -95,7 +120,7 @@ const styles = StyleSheet.create({
         marginVertical: 5,
     },
     buttonClose: {
-        backgroundColor: 'red', // Cierre de Caja
+        backgroundColor: 'red',
         alignItems: 'center',
         padding: 15,
         borderRadius: 10,
@@ -103,47 +128,31 @@ const styles = StyleSheet.create({
         marginVertical: 5,
     },
     buttonModify: {
-        backgroundColor: 'blue', // Modificar
+        backgroundColor: 'blue',
         alignItems: 'center',
         padding: 15,
         borderRadius: 10,
         width: '90%',
         marginVertical: 5,
     },
-
     buttonCerrar: {
-        backgroundColor: '#BA68C8', // Color del fondo del botón
-        padding: 15,               // Espaciado interno
-        borderRadius: 10,          // Bordes redondeados
-        width: '90%',              // Ancho del botón
-        alignItems: 'center',      // Centrar contenido horizontalmente
-        justifyContent: 'center',   // Centrar contenido verticalmente
+        backgroundColor: '#BA68C8',
+        padding: 15,
+        borderRadius: 10,
+        width: '90%',
+        alignItems: 'center',
+        justifyContent: 'center',
         marginTop: 50,
     },
-    
     buttonText: {
         color: 'white',
         fontSize: 18,
         fontWeight: 'bold',
     },
-
     contenedor2: {
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 10,
-    },
-
-    button2: {
-        backgroundColor: 'red', 
-        alignItems: 'center',
-        padding: 15,
-        borderRadius: 10,
-        width: '90%',
-    },
-    buttonText2: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
     },
     contenedor3: { 
         padding: 16, 
@@ -153,38 +162,15 @@ const styles = StyleSheet.create({
         height: 40, 
         backgroundColor: 'violet' 
     },
-
     textoEncabezado: { 
         fontSize: 10,
         textAlign: 'center', 
         fontWeight: 'bold',
     },  
-
     textoFila: { 
-        textAlign: 'center' ,
+        textAlign: 'center',
     },
     fondo2: {
         backgroundColor: 'white',
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 20,
-        paddingHorizontal: 20,
-    },
-    input: {
-        flex: 1,
-        backgroundColor: 'white',
-        padding: 10,
-        borderRadius: 5,
-        borderWidth: 1,
-        borderColor: '#ccc',
-    },
-    updateButton: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 5,
-        marginLeft: 10,
     },
 });

@@ -2,26 +2,37 @@ import { StatusBar } from 'expo-status-bar';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ImageBackground, StyleSheet, Alert } from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, addDoc } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
 
-const App = () => {
-  const [monto, setMonto] = useState(''); 
+const AperturaCaja = () => {
+  const [montoInicial, setMontoInicial] = useState(''); 
   const navigation = useNavigation();
 
   const confirmarMonto = () => {
     Alert.alert(
         "Confirmar Monto",
-        `¿Está seguro de que desea ingresar $${monto} como monto inicial?`,
+        `¿Está seguro de que desea ingresar $${montoInicial} como monto inicial?`,
         [
-            {
-                text: "Cancelar",
-                style: "cancel"
-            },
-            {
-                text: "Confirmar",
-                onPress: () => navigation.navigate('Caja') 
-            }
-        ]
+              { text: "Cancelar", style: "cancel" },
+              { text: "Confirmar", onPress: guardarMontoInicial }
+        ],
     );
+  };
+
+  const guardarMontoInicial = async () => {
+    try {
+      await addDoc(collection(db, 'caja'), {
+        monto_inicial: montoInicial,
+        fecha_apertura: new Date().toISOString()
+      });
+      Alert.alert('Éxito', 'Monto guardado con éxito');
+      navigation.navigate('Caja', { montoInicial: montoInicial }); // Redirige a la pantalla 'Caja'
+    } catch (error) {
+      console.error("Error al guardar el monto: ", error);
+      Alert.alert('Error', 'No se pudo guardar el monto');
+    }
   };
 
   return (
@@ -39,8 +50,8 @@ const App = () => {
             <TextInput
               style={styles.input}
               placeholder="Escribe el monto inicial"
-              value={monto}
-              onChangeText={setMonto}
+              value={montoInicial}
+              onChangeText={setMontoInicial}
               keyboardType="numeric"
             />
           </View>
@@ -132,4 +143,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default App;
+export default AperturaCaja;
