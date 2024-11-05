@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+import { app } from '../firebaseConfig';
 
 const AperturaCaja = () => {
   const [montoInicial, setMontoInicial] = useState(''); 
@@ -23,7 +23,7 @@ const AperturaCaja = () => {
 
   const guardarMontoInicial = async () => {
     try {
-      await addDoc(collection(db, 'caja'), {
+      await addDoc(collection(app, 'caja'), {
         monto_inicial: montoInicial,
         fecha_apertura: new Date().toISOString()
       });

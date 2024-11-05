@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, ImageBackground, S
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { collection, addDoc } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+import { app } from '../firebaseConfig';
 
 const CierreCaja = () => {
   const [montoFinal, setMontoFinal] = useState(''); 
@@ -27,7 +27,7 @@ const CierreCaja = () => {
 
   const guardarMontoFinal = async () => {
     try {
-      await addDoc(collection(db, 'cierre_caja'), {
+      await addDoc(collection(app, 'cierre_caja'), {
         monto_final: montoFinal,
         fecha_cierre: new Date().toISOString()
       });

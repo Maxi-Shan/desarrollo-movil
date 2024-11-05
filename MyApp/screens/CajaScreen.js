@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Alert, Scrol
 import { Table, Row } from 'react-native-table-component';
 import { useNavigation } from '@react-navigation/native';
 import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+import { app } from '../firebaseConfig';
 
 export default function CajaScreen() {
     const navigation = useNavigation();
@@ -15,7 +15,7 @@ export default function CajaScreen() {
     }, []);
 
     const cargarDatos = async () => {
-        const snapshot = await getDocs(collection(db, 'caja'));
+        const snapshot = await getDocs(collection(app, 'caja'));
         const nuevosDatos = [];
         snapshot.forEach((doc) => {
             const data = doc.data();
@@ -44,7 +44,7 @@ export default function CajaScreen() {
 
     const eliminarRegistro = async (id) => {
         try {
-            await deleteDoc(doc(db, 'caja', id));
+            await deleteDoc(doc(app, 'caja', id));
             Alert.alert("Éxito", "Registro eliminado correctamente");
             cargarDatos(); // Actualizar datos después de eliminar
         } catch (error) {
@@ -85,7 +85,7 @@ export default function CajaScreen() {
                                     <>
                                         <TouchableOpacity
                                             style={styles.buttonModify}
-                                            onPress={() => navigation.navigate('Modificar', { id: fila[0] })}
+                                            onPress={() => navigation.navigate('Modificar', { id: fila[0], montoInicial: fila[3], montoRecaudado: fila[4] })}
                                         >
                                             <Text style={styles.buttonText}>Modificar</Text>
                                         </TouchableOpacity>
@@ -98,7 +98,7 @@ export default function CajaScreen() {
                                     </>
                                 ]}
                                 style={styles.fondo2}
-                                textStyle={styles.textoFila} // Asegúrate que este es un objeto
+                                textStyle={styles.textoFila}
                             />
                         ))}
                     </Table>
@@ -107,7 +107,7 @@ export default function CajaScreen() {
                 <View style={styles.contenedor2}>
                 <TouchableOpacity 
                     style={styles.buttonCerrar} 
-                    onPress={() => navigation.navigate('CierreSesion')} // Navegar a CierreSesion
+                    onPress={() => navigation.navigate('CierreSesion')}
                 >   
                     <Text style={styles.buttonText}>Cerrar Sesión</Text>
                 </TouchableOpacity>
@@ -190,6 +190,6 @@ const styles = StyleSheet.create({
     contenedor3: { padding: 16, paddingTop: 30 },
     encabezado2: { height: 40, backgroundColor: 'violet' },
     textoEncabezado: { fontSize: 10, textAlign: 'center', fontWeight: 'bold' },
-    textoFila: { textAlign: 'center' }, // Debe ser un objeto
+    textoFila: { textAlign: 'center' },
     fondo2: { backgroundColor: 'white' },
 });

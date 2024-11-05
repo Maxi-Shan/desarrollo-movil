@@ -1,15 +1,28 @@
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Alert } from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { doc, updateDoc } from 'firebase/firestore';
+import { app } from '../firebaseConfig';
 
 const ModificarScreen = ({ route }) => {
   const navigation = useNavigation();
-  const [montoInicial, setMontoInicial] = useState(route.params?.montoInicial || ''); 
-  const [montoRecaudado, setMontoRecaudado] = useState(route.params?.montoRecaudado || '');
+  const { id, montoInicial: inicial, montoRecaudado: recaudado } = route.params;
+  const [montoInicial, setMontoInicial] = useState(inicial || '');
+  const [montoRecaudado, setMontoRecaudado] = useState(recaudado || '');
 
-  const handleModificar = () => {
-    Alert.alert('Registro Modificado', 'El registro ha sido modificado exitosamente');
-    navigation.navigate('CajaScreen');
+  const handleModificar = async () => {
+    try {
+      const cajaRef = doc(app, 'caja', id);
+      await updateDoc(cajaRef, {
+        monto_inicial: parseFloat(montoInicial),
+        monto_recaudado: parseFloat(montoRecaudado)
+      });
+      Alert.alert('Éxito', 'Registro modificado exitosamente');
+      navigation.navigate('CajaScreen');
+    } catch (error) {
+      console.error('Error al modificar el registro:', error);
+      Alert.alert('Error', 'No se pudo modificar el registro');
+    }
   };
 
   return (

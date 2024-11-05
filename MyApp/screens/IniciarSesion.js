@@ -2,10 +2,10 @@ import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import { Image, Text, StyleSheet, View, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import db from "../firebaseConfig"; // Ajusta según la ubicación exacta
+import app from "../firebaseConfig"; // Ajusta según la ubicación exacta
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
-const auth = getAuth(db);
+const auth = getAuth(app);
 
 export default function App() {
     const navigation = useNavigation();
