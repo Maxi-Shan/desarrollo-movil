@@ -2,10 +2,10 @@ import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import { Image, Text, StyleSheet, View, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import app from "../firebaseConfig"; // Ajusta según la ubicación exacta
+import db from "../firebaseConfig"; 
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
-const auth = getAuth(app);
+const auth = getAuth(db);
 
 export default function App() {
     const navigation = useNavigation();
@@ -36,6 +36,7 @@ export default function App() {
             }}>
                 <View style={styles.login}>
                     <Image source={require('../assets/02.png')} style={styles.profilePicture}/>
+                    <Text style={{fontSize: 20, fontWeight: 'bold', color: 'white', marginBottom: 20,}}>Iniciar Secion</Text>
 
                     <View>
                         <Text style={{fontSize: 17, fontWeight: '400', color: 'white'}}>Email</Text>
@@ -91,12 +92,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     profilePicture: {
-        width: 100,
-        height: 100,
-        borderColor: '#fff',
-        borderRadius: 50,
-        borderWidth: 2,
-        marginVertical: 6,
+        width: 200,
+        height: 150,
+        marginTop: -100,
     },
     input: {
         width: 250,
@@ -111,13 +109,18 @@ const styles = StyleSheet.create({
     },
     buttom: {
         width: 250,
-        height: 40,
+        height: 80,
         borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
         marginVertical: 10,
         borderColor: '#fff',
         borderWidth: 1,
-        marginTop: 50,
+        marginTop: 20,
+    },
+    fondo: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });

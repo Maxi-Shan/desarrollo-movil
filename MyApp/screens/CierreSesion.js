@@ -12,7 +12,7 @@ export default function CierreSesion() {
     try {
       await signOut(auth);
       Alert.alert("Sesión cerrada", "Has cerrado sesión correctamente.");
-      navigation.navigate('Inicio'); // Navegar a la pantalla de inicio
+      navigation.navigate('IniciarSesion'); // Navegar a la pantalla de inicio
     } catch (error) {
       console.error("Error al cerrar sesión: ", error);
       Alert.alert("Error", "No se pudo cerrar la sesión.");
@@ -21,27 +21,27 @@ export default function CierreSesion() {
 
   return (
     <View style={styles.container}> 
-      <StatusBar style="light"/>
+      <StatusBar style="light" />
       <Image source={require('../assets/11.png')} style={[styles.image, StyleSheet.absoluteFill]} />
 
       <View>
-        <Image source={require('../assets/logo.png')} style={styles.logo}/>
+        <Image source={require('../assets/logo.png')} style={styles.logo} />
       </View>
 
       <View style={styles.tarjeta}>
 
-        <Text style={styles.titulo}> Estas por cerrar sesion </Text>
-        <Text style={styles.subtitulo}> ¿Estas seguro que quieres cerrar sesión? </Text>
+        <Text style={styles.titulo}>Estas por cerrar sesión</Text>
+        <Text style={styles.subtitulo}>¿Estás seguro de que quieres cerrar sesión?</Text>
 
         <View style={styles.containerBoton}>
-          <TouchableOpacity style={styles.cajaBoton} onPress={cerrarSesion}> {/* Llama a cerrarSesion */}
-              <Text style={styles.textoBoton}> Confirmar </Text>
+          <TouchableOpacity style={styles.cajaBoton} onPress={cerrarSesion}>
+            <Text style={styles.textoBoton}>Confirmar</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.containerBoton}>
-          <TouchableOpacity style={styles.cajaBoton} onPress={() => navigation.navigate('Caja')}>
-              <Text style={styles.textoBoton}> Cancelar </Text>
+          <TouchableOpacity style={styles.cajaBoton2} onPress={() => navigation.navigate('Caja')}>
+            <Text style={styles.textoBoton}>Cancelar</Text>
           </TouchableOpacity>
         </View>
 
@@ -50,8 +50,6 @@ export default function CierreSesion() {
   );
 }
 
-
-//estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -64,43 +62,61 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
   },
-  login: {
-    width: 290,
-    height: 440,
-    borderColor: '#da78d6',
-    borderWidth: 6,
-    backgroundColor: '#6F1C7E',
-    borderRadius: 10,
-    padding: 10,
-    alignItems: 'center',
-  },
-  profilePicture: {
-    width: 100,
+  logo: {
+    width: 200,  // Ajusta el tamaño de tu logo según lo necesites
     height: 100,
-    borderColor: '#fff',
-    borderRadius: 50,
-    borderWidth: 2,
-    marginVertical: 6,
-  },
-  input: {
-    width: 250,
-    height: 40,
-    borderColor: '#fff',
-    borderWidth: 2,
-    borderRadius: 10,
-    padding: 10,
-    marginVertical: 10,
-    backgroundColor: '#ffffff90',
+    resizeMode: 'contain',
     marginBottom: 20,
   },
-  buttom: {
-    width: 250,
-    height: 40,
+  tarjeta: {
+    backgroundColor: '#fff',
     borderRadius: 10,
+    padding: 20,
+    width: '80%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  titulo: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  subtitulo: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#555',
+  },
+  containerBoton: {
+    width: '100%',
+    marginVertical: 10,
+  },
+  cajaBoton: {
+    backgroundColor: 'green',
+    paddingVertical: 15,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 10,
-    borderColor: '#fff',
-    borderWidth: 1,
+  },
+  cajaBoton2: {
+    backgroundColor: 'red',
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textoBoton: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

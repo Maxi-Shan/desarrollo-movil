@@ -1,13 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Alert, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react'; 
+import { StatusBar } from 'expo-status-bar';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, ScrollView, Alert } from 'react-native';
 import { Table, Row } from 'react-native-table-component';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
-import { app } from '../firebaseConfig';
+import { db } from '../firebaseConfig';
 
 export default function CajaScreen() {
     const navigation = useNavigation();
+    const route = useRoute();
     const [datos, setDatos] = useState([]);
+    const [montoInicial, setMontoInicial] = useState('');
+    const [montoFinal, setMontoFinal] = useState('');
+    const [isCajaAbierta, setIsCajaAbierta] = useState(false);
+
     const encabezado = ['ID_caja', 'Fecha_apertura', 'Fecha_cierre', 'Monto_inicial', 'Monto_Recaudado', 'Monto_total', 'Acciones'];
 
     useEffect(() => {
@@ -15,14 +21,14 @@ export default function CajaScreen() {
     }, []);
 
     const cargarDatos = async () => {
-        const snapshot = await getDocs(collection(app, 'caja'));
+        const snapshot = await getDocs(collection(db, 'caja'));
         const nuevosDatos = [];
         snapshot.forEach((doc) => {
             const data = doc.data();
             nuevosDatos.push([
                 doc.id,
-                data.fecha_apertura || '---',
-                data.fecha_cierre || '---',
+                data.fecha_apertura?.toDate().toLocaleDateString() || '---',
+                data.fecha_cierre?.toDate().toLocaleDateString() || '---',
                 data.monto_inicial || '---',
                 data.monto_recaudado || '---',
                 data.monto_total || '---',
@@ -44,7 +50,7 @@ export default function CajaScreen() {
 
     const eliminarRegistro = async (id) => {
         try {
-            await deleteDoc(doc(app, 'caja', id));
+            await deleteDoc(doc(db, 'caja', id));
             Alert.alert("Éxito", "Registro eliminado correctamente");
             cargarDatos(); // Actualizar datos después de eliminar
         } catch (error) {
@@ -52,6 +58,47 @@ export default function CajaScreen() {
             Alert.alert("Error", "No se pudo eliminar el registro");
         }
     };
+
+    useEffect(() => {
+        if (route.params?.montoInicial) {
+            const montoInicialNum = parseFloat(route.params.montoInicial);
+            setMontoInicial(montoInicialNum);
+            setIsCajaAbierta(true);
+
+            const nuevoDato = [
+                '1', 
+                new Date().toLocaleDateString(),
+                '---',
+                montoInicialNum,
+                0, 
+                montoInicialNum
+            ];
+            setDatos((prevDatos) => [...prevDatos, nuevoDato]);
+        }
+        
+        if (route.params?.montoFinal) {
+            const montoFinalNum = parseFloat(route.params.montoFinal);
+            setMontoFinal(montoFinalNum);
+
+            setDatos((prevDatos) => {
+                const ultimoIndice = prevDatos.length - 1;
+                const datosActualizados = [...prevDatos];
+                const montoInicialActual = parseFloat(datosActualizados[ultimoIndice][3]);
+
+                const montoRecaudado = montoFinalNum;
+
+                datosActualizados[ultimoIndice] = [
+                    '1',
+                    datosActualizados[ultimoIndice][1],
+                    new Date().toLocaleDateString(),
+                    montoInicialActual,
+                    montoRecaudado,
+                    montoInicialActual + montoRecaudado
+                ];
+                return datosActualizados;
+            });
+        }
+    }, [route.params?.montoInicial, route.params?.montoFinal]);
 
     return (
         <ImageBackground 
@@ -69,7 +116,17 @@ export default function CajaScreen() {
                     </TouchableOpacity>
                 </View>
                 <View style={styles.contenedor2}>
-                    <TouchableOpacity style={styles.buttonClose} onPress={() => navigation.navigate('Cierre')}>
+                    <TouchableOpacity 
+                        style={[styles.buttonClose, !isCajaAbierta && styles.buttonDisabled]} 
+                        onPress={() => {
+                            if (isCajaAbierta) {
+                                navigation.navigate('Cierre');
+                            } else {
+                                Alert.alert("Advertencia", "Debe realizar la apertura de caja primero.");
+                            }
+                        }}
+                        disabled={!isCajaAbierta}
+                    >
                         <Text style={styles.buttonText}>Cierre de Caja</Text>
                     </TouchableOpacity>
                 </View>
@@ -82,10 +139,10 @@ export default function CajaScreen() {
                                 key={index}
                                 data={[
                                     ...fila,
-                                    <>
+                                    <View key={index} style={{ flexDirection: 'row' }}>
                                         <TouchableOpacity
                                             style={styles.buttonModify}
-                                            onPress={() => navigation.navigate('Modificar', { id: fila[0], montoInicial: fila[3], montoRecaudado: fila[4] })}
+                                            onPress={() => navigation.navigate('Modificar', { id: fila[0] })}
                                         >
                                             <Text style={styles.buttonText}>Modificar</Text>
                                         </TouchableOpacity>
@@ -95,7 +152,7 @@ export default function CajaScreen() {
                                         >
                                             <Text style={styles.buttonText}>Eliminar</Text>
                                         </TouchableOpacity>
-                                    </>
+                                    </View>
                                 ]}
                                 style={styles.fondo2}
                                 textStyle={styles.textoFila}
@@ -105,12 +162,9 @@ export default function CajaScreen() {
                 </View>
 
                 <View style={styles.contenedor2}>
-                <TouchableOpacity 
-                    style={styles.buttonCerrar} 
-                    onPress={() => navigation.navigate('CierreSesion')}
-                >   
-                    <Text style={styles.buttonText}>Cerrar Sesión</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity style={styles.buttonCerrar} onPress={() => navigation.navigate('CierreSesion')}>
+                        <Text style={styles.buttonText}>Cerrar Sesión</Text>
+                    </TouchableOpacity>
                 </View>
             </ScrollView>
         </ImageBackground>
@@ -118,6 +172,85 @@ export default function CajaScreen() {
 }
 
 const styles = StyleSheet.create({
+  fondo: {
+    flex: 1,
+  },
+  encabezado: {
+    padding: 20,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    alignItems: 'center',
+  },
+  titulo: {
+    fontSize: 24,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  scroll: {
+    flex: 1,
+  },
+  contenedor: {
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  buttonOpen: {
+    backgroundColor: 'blue',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  buttonClose: {
+    backgroundColor: 'green',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  buttonDisabled: {
+    backgroundColor: 'gray',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  contenedor2: {
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  contenedor3: {
+    padding: 10,
+  },
+  encabezado2: {
+    height: 40,
+    backgroundColor: '#f1f8ff',
+  },
+  textoEncabezado: {
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  fondo2: {
+    height: 50,
+    backgroundColor: '#fff',
+  },
+  textoFila: {
+    textAlign: 'center',
+  },
+  buttonModify: {
+    backgroundColor: 'orange',
+    padding: 5,
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  buttonDelete: {
+    backgroundColor: 'red',
+    padding: 5,
+    borderRadius: 5,
+  },
+  buttonCerrar: {
+    backgroundColor: 'purple',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+
     fondo: { flex: 1 },
     encabezado: {
         height: 60,

@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f4b8dc', // Color del botón rosa claro
         padding: 15,
         borderRadius: 10,
-        width: '90%',
+        width: 90,
         alignItems: 'center',
     },
     buttonText: {

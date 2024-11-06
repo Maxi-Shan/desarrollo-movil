@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
-import { app } from '../firebaseConfig';
+import { db } from '../firebaseConfig';
 
 const AperturaCaja = () => {
   const [montoInicial, setMontoInicial] = useState(''); 
@@ -23,7 +23,7 @@ const AperturaCaja = () => {
 
   const guardarMontoInicial = async () => {
     try {
-      await addDoc(collection(app, 'caja'), {
+      await addDoc(collection(db, 'caja'), {
         monto_inicial: montoInicial,
         fecha_apertura: new Date().toISOString()
       });
@@ -59,7 +59,7 @@ const AperturaCaja = () => {
           <View style={styles.buttonContainer}>
             <TouchableOpacity 
               style={[styles.boton, styles.botonVolver]} 
-              onPress={() => alert('Botón Volver presionado')}>
+              onPress={() => navigation.navigate('Caja')}>
               <Text style={styles.textoBoton}>Volver</Text>
             </TouchableOpacity>
 
@@ -130,9 +130,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderColor: '#fff',
     borderWidth: 1,
-  },
-  botonVolver: {
-    backgroundColor: 'blue',
   },
   botonCerrar: {
     backgroundColor: 'green',
