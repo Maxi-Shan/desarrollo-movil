@@ -15,7 +15,7 @@ export default function App() {
     const logueo = async () => {
         try {
             await signInWithEmailAndPassword(auth, Email, Password);
-            Alert.alert('Iniciando sesión', 'Accediendo...');
+            Alert.alert('Iniciando sesión', 'Bievenido a EspacioAnaSol');
             navigation.navigate('WelcomeScreen'); // Cambia a la pantalla de bienvenida al iniciar sesión
         } catch (error) {
             console.log(error);

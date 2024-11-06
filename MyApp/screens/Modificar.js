@@ -11,7 +11,7 @@ const Modificar = ({ route }) => {
 
   const [montoInicialState, setMontoInicialState] = useState((montoInicial ?? '').toString());
   const [montoRecaudadoState, setMontoRecaudadoState] = useState((montoRecaudado ?? '').toString());
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleModificar = async () => {
     if (!montoInicialState.trim() || !montoRecaudadoState.trim()) {
