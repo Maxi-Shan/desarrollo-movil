@@ -16,7 +16,7 @@ export default function App() {
       <Stack.Navigator initialRouteName="IniciarSesion">
         <Stack.Screen name="IniciarSesion" component={IniciarSesion} />
         <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
-        <Stack.Screen name="Caja" component={CajaScreen} />
+        <Stack.Screen name="CajaScreen" component={CajaScreen} />
         <Stack.Screen name="AperturaCaja" component={AperturaCaja} />
         <Stack.Screen name="Modificar" component={Modificar} />
         <Stack.Screen name="Cierre" component={Cierre} />

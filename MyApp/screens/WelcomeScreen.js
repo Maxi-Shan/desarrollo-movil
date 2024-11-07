@@ -17,7 +17,7 @@ const WelcomeScreen = () => {
                 <Text style={styles.subtitle}>¡Gestiona tu caja!</Text>
             </View>
             <View>
-                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Caja')}>
+                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('CajaScreen')}>
                     <Text style={styles.buttonText}>Ir a Caja</Text>
                 </TouchableOpacity>
             </View>
@@ -52,13 +52,14 @@ const styles = StyleSheet.create({
     subtitle: {
         fontSize: 18,
         color: '#fff',
+        marginBottom: 200,
     },
     button: {
         backgroundColor: '#f4b8dc', // Color del botón rosa claro
-        padding: 15,
+        padding: 40,
         borderRadius: 10,
-        width: 90,
         alignItems: 'center',
+        marginTop: -100,
     },
     buttonText: {
         color: '#000',

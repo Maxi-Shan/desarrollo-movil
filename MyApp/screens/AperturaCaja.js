@@ -1,37 +1,65 @@
-import { StatusBar } from 'expo-status-bar';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ImageBackground, StyleSheet, Alert } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc } from 'firebase/firestore';
+import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 
 const AperturaCaja = () => {
   const [montoInicial, setMontoInicial] = useState(''); 
+  const [cajaAbierta, setCajaAbierta] = useState(false);
   const navigation = useNavigation();
 
+  useEffect(() => {
+    verificarCajaAbierta();
+  }, []);
+
+  const verificarCajaAbierta = async () => {
+    try {
+      // Consulta para ver si hay alguna caja sin fecha de cierre
+      const cajaQuery = query(collection(db, 'caja'), where('fecha_cierre', '==', '---'));
+      const snapshot = await getDocs(cajaQuery);
+
+      // Si existe al menos un documento sin fecha de cierre, hay una caja abierta
+      if (!snapshot.empty) {
+        setCajaAbierta(true);
+      }
+    } catch (error) {
+      console.error("Error al verificar caja abierta: ", error);
+      Alert.alert('Error', 'No se pudo verificar el estado de la caja');
+    }
+  };
+
   const confirmarMonto = () => {
-    Alert.alert(
+    if (cajaAbierta) {
+      // Muestra una alerta si ya hay una caja abierta
+      Alert.alert('Advertencia', 'Debe cerrar la caja actual antes de abrir una nueva.');
+    } else {
+      // Confirma el monto si no hay caja abierta
+      Alert.alert(
         "Confirmar Monto",
         `¿Está seguro de que desea ingresar $${montoInicial} como monto inicial?`,
         [
-              { text: "Cancelar", style: "cancel" },
-              { text: "Confirmar", onPress: guardarMontoInicial }
+          { text: "Cancelar", style: "cancel" },
+          { text: "Confirmar", onPress: guardarMontoInicial }
         ],
-    );
+      );
+    }
   };
 
   const guardarMontoInicial = async () => {
     try {
-      await addDoc(collection(db, 'caja'), {
+      await addDoc(collection(db, 'caja'), { 
         monto_inicial: montoInicial,
-        fecha_apertura: new Date().toISOString()
+        fecha_apertura: new Date().toISOString(),
+        fecha_cierre: '---',
+        monto_recaudado: 0,
+        monto_total: montoInicial
       });
-      Alert.alert('Éxito', 'Monto guardado con éxito');
-      navigation.navigate('Caja', { montoInicial: montoInicial }); // Redirige a la pantalla 'Caja'
+      Alert.alert('Éxito', 'Monto inicial guardado con éxito');
+      navigation.navigate('CajaScreen', { montoInicial: montoInicial });
     } catch (error) {
-      console.error("Error al guardar el monto: ", error);
-      Alert.alert('Error', 'No se pudo guardar el monto');
+      console.error("Error al guardar el monto inicial: ", error);
+      Alert.alert('Error', 'No se pudo guardar el monto inicial');
     }
   };
 
@@ -59,7 +87,7 @@ const AperturaCaja = () => {
           <View style={styles.buttonContainer}>
             <TouchableOpacity 
               style={[styles.boton, styles.botonVolver]} 
-              onPress={() => navigation.navigate('Caja')}>
+              onPress={() => navigation.navigate('CajaScreen')}>
               <Text style={styles.textoBoton}>Volver</Text>
             </TouchableOpacity>
 
@@ -74,6 +102,8 @@ const AperturaCaja = () => {
     </ImageBackground>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   fondo: {

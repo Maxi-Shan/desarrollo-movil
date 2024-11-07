@@ -1,4 +1,3 @@
-import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import { Image, Text, StyleSheet, View, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -36,10 +35,10 @@ export default function App() {
             }}>
                 <View style={styles.login}>
                     <Image source={require('../assets/02.png')} style={styles.profilePicture}/>
-                    <Text style={{fontSize: 20, fontWeight: 'bold', color: 'white', marginBottom: 20,}}>Iniciar Secion</Text>
+                    <Text style={{fontSize: 25, fontWeight: 'bold', color: 'white', marginBottom: 20,}}>Iniciar Secion</Text>
 
                     <View>
-                        <Text style={{fontSize: 17, fontWeight: '400', color: 'white'}}>Email</Text>
+                        <Text style={{fontSize: 15, fontWeight: '400', color: 'white'}}>Email</Text>
                         <TextInput 
                             style={styles.input} 
                             placeholder='usuario@gmail.com'
@@ -47,7 +46,7 @@ export default function App() {
                         />
                     </View>
                     <View>
-                        <Text style={{fontSize: 17, fontWeight: '400', color: 'white'}}>Contraseña</Text>
+                        <Text style={{fontSize: 15, fontWeight: '400', color: 'white'}}>Contraseña</Text>
                         <TextInput 
                             style={styles.input} 
                             placeholder='contraseña'
@@ -60,7 +59,7 @@ export default function App() {
                         style={[styles.buttom, { backgroundColor: '#BA68C8' }]} 
                         onPress={logueo}
                     >
-                        <Text style={{ fontSize: 17, fontWeight: '400', color: 'white' }}>Ingresar</Text>
+                        <Text style={{ fontSize: 17, fontWeight: 'bold', color: 'white' }}>Ingresar</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>  
@@ -68,7 +67,6 @@ export default function App() {
     );
 }
 
-//estilos
 const styles = StyleSheet.create({
     container: {
         flex: 1,

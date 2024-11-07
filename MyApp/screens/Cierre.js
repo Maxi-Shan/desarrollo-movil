@@ -1,38 +1,67 @@
 import { StatusBar } from 'expo-status-bar';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ImageBackground, StyleSheet, Alert } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { collection, addDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDocs, collection } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 
 const CierreCaja = () => {
-  const [montoFinal, setMontoFinal] = useState(''); 
+  const [montoFinal, setMontoFinal] = useState('');
+  const [idCaja, setIdCaja] = useState(null); // Estado para guardar el ID de la caja abierta
   const navigation = useNavigation();
 
+  // Cargar el ID de la caja abierta (sin fecha de cierre)
+  useEffect(() => {
+    const cargarCajaAbierta = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'caja'));
+        const cajaAbierta = snapshot.docs.find(doc => doc.data().fecha_cierre === '---');
+        
+        if (cajaAbierta) {
+          setIdCaja(cajaAbierta.id); // Guardar el ID de la caja abierta
+        } else {
+          Alert.alert('Advertencia', 'No hay ninguna caja abierta.');
+        }
+      } catch (error) {
+        console.error("Error al cargar la caja abierta: ", error);
+        Alert.alert('Error', 'No se pudo cargar la caja abierta');
+      }
+    };
+
+    cargarCajaAbierta();
+  }, []);
+
   const confirmarMontoFinal = () => {
-    // Solo actualiza el estado si la entrada es un número o una cadena vacía
     const numericInput = montoFinal.replace(/[^0-9]/g, ''); // Reemplaza cualquier carácter que no sea un número
     setMontoFinal(numericInput);
   };
+
   const confirmarMonto = () => {
+    if (!idCaja) {
+      Alert.alert('Error', 'No se ha encontrado una caja abierta.');
+      return;
+    }
+
     Alert.alert(
-        "Confirmar Monto Final",
-        `¿Está seguro que desea cerrar la caja con $${montoFinal} como monto final?`,
-        [
-              { text: "Cancelar", style: "cancel" },
-              { text: "Confirmar", onPress: guardarMontoFinal }
-        ],
+      "Confirmar Monto Final",
+      `¿Está seguro que desea cerrar la caja con $${montoFinal} como monto final?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Confirmar", onPress: guardarMontoFinal }
+      ],
     );
   };
 
   const guardarMontoFinal = async () => {
+    if (!idCaja) return;
+
     try {
-      await addDoc(collection(db, 'cierre_caja'), {
-        monto_final: montoFinal,
+      await updateDoc(doc(db, 'caja', idCaja), { // Usa el ID de la caja abierta
+        monto_recaudado: montoFinal,
         fecha_cierre: new Date().toISOString()
       });
       Alert.alert('Éxito', 'Monto final guardado con éxito');
-      navigation.navigate('Caja', { montoFinal: montoFinal }); // Redirige a la pantalla 'Caja' con el monto final
+      navigation.navigate('CajaScreen', { montoFinal: montoFinal });
     } catch (error) {
       console.error("Error al guardar el monto final: ", error);
       Alert.alert('Error', 'No se pudo guardar el monto final');
@@ -57,13 +86,13 @@ const CierreCaja = () => {
               value={montoFinal}
               onChangeText={setMontoFinal}
               keyboardType="numeric"
-      />
+            />
           </View>
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity 
               style={[styles.boton, styles.botonVolver]} 
-              onPress={() => navigation.navigate('Caja')}>
+              onPress={() => navigation.navigate('CajaScreen')}>
               <Text style={styles.textoBoton}>Volver</Text>
             </TouchableOpacity>
 
@@ -78,6 +107,7 @@ const CierreCaja = () => {
     </ImageBackground>
   );
 };
+
 
 const styles = StyleSheet.create({
   fondo: {
@@ -136,10 +166,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   botonVolver: {
-    backgroundColor: 'blue',
+    backgroundColor: 'black',
   },
   botonCerrar: {
-    backgroundColor: 'green',
+    backgroundColor: 'red',
   },
   textoBoton: {
     color: 'white',

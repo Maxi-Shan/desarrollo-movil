@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'; 
 import { StatusBar } from 'expo-status-bar';
+import React, { useState, useEffect } from 'react'; 
 import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, ScrollView, Alert } from 'react-native';
 import { Table, Row } from 'react-native-table-component';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -10,32 +10,51 @@ export default function CajaScreen() {
     const navigation = useNavigation();
     const route = useRoute();
     const [datos, setDatos] = useState([]);
-    const [montoInicial, setMontoInicial] = useState('');
-    const [montoFinal, setMontoFinal] = useState('');
     const [isCajaAbierta, setIsCajaAbierta] = useState(false);
 
-    const encabezado = ['ID_caja', 'Fecha_apertura', 'Fecha_cierre', 'Monto_inicial', 'Monto_Recaudado', 'Monto_total', 'Acciones'];
+    const encabezado = ['ID', 'Fecha Apertura', 'Fecha Cierre', 'Monto Inicial', 'Monto Recaudado', 'Monto Total', 'Acciones'];
 
     useEffect(() => {
-        cargarDatos();
-    }, []);
+        const unsubscribe = navigation.addListener('focus', () => {
+            cargarDatos(); // Cargar datos cada vez que la pantalla se enfoca
+        });
+        return unsubscribe; 
+    }, [navigation]);
 
     const cargarDatos = async () => {
-        const snapshot = await getDocs(collection(db, 'caja'));
-        const nuevosDatos = [];
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            nuevosDatos.push([
-                doc.id,
-                data.fecha_apertura?.toDate().toLocaleDateString() || '---',
-                data.fecha_cierre?.toDate().toLocaleDateString() || '---',
-                data.monto_inicial || '---',
-                data.monto_recaudado || '---',
-                data.monto_total || '---',
-            ]);
-        });
-        setDatos(nuevosDatos);
-    };
+        try {
+            const snapshot = await getDocs(collection(db, 'caja'));
+            const nuevosDatos = [];
+            let cajaAbierta = false;
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const fechaApertura = data.fecha_apertura
+                    ? new Date(data.fecha_apertura).toLocaleDateString() 
+                    : '---';
+                const fechaCierre = data.fecha_cierre !== '---' 
+                    ? new Date(data.fecha_cierre).toLocaleDateString()
+                    : '---';
+
+                    nuevosDatos.push({
+                        numero_id: data.numero_id || '---',  // Mostrar el `numero_id`
+                        fecha_apertura: fechaApertura,
+                        fecha_cierre: fechaCierre,
+                        monto_inicial: data.monto_inicial || '---',
+                        monto_recaudado: data.monto_recaudado || '---',
+                        monto_total: (parseFloat(data.monto_inicial) || 0) + (parseFloat(data.monto_recaudado) || 0),
+                    });
+
+                if (data.fecha_cierre === '---') cajaAbierta = true;
+            });
+
+            setIsCajaAbierta(cajaAbierta);
+            setDatos(nuevosDatos);
+    } catch (error) {
+        console.error("Error al cargar datos:", error);
+        Alert.alert("Error", "No se pudieron cargar los datos");
+    }
+};
 
     const confirmarEliminar = (id) => {
         Alert.alert(
@@ -52,53 +71,12 @@ export default function CajaScreen() {
         try {
             await deleteDoc(doc(db, 'caja', id));
             Alert.alert("Éxito", "Registro eliminado correctamente");
-            cargarDatos(); // Actualizar datos después de eliminar
+            cargarDatos();
         } catch (error) {
             console.error("Error al eliminar el registro: ", error);
             Alert.alert("Error", "No se pudo eliminar el registro");
         }
     };
-
-    useEffect(() => {
-        if (route.params?.montoInicial) {
-            const montoInicialNum = parseFloat(route.params.montoInicial);
-            setMontoInicial(montoInicialNum);
-            setIsCajaAbierta(true);
-
-            const nuevoDato = [
-                '1', 
-                new Date().toLocaleDateString(),
-                '---',
-                montoInicialNum,
-                0, 
-                montoInicialNum
-            ];
-            setDatos((prevDatos) => [...prevDatos, nuevoDato]);
-        }
-        
-        if (route.params?.montoFinal) {
-            const montoFinalNum = parseFloat(route.params.montoFinal);
-            setMontoFinal(montoFinalNum);
-
-            setDatos((prevDatos) => {
-                const ultimoIndice = prevDatos.length - 1;
-                const datosActualizados = [...prevDatos];
-                const montoInicialActual = parseFloat(datosActualizados[ultimoIndice][3]);
-
-                const montoRecaudado = montoFinalNum;
-
-                datosActualizados[ultimoIndice] = [
-                    '1',
-                    datosActualizados[ultimoIndice][1],
-                    new Date().toLocaleDateString(),
-                    montoInicialActual,
-                    montoRecaudado,
-                    montoInicialActual + montoRecaudado
-                ];
-                return datosActualizados;
-            });
-        }
-    }, [route.params?.montoInicial, route.params?.montoFinal]);
 
     return (
         <ImageBackground 
@@ -112,7 +90,7 @@ export default function CajaScreen() {
             <ScrollView style={styles.scroll}>
                 <View style={styles.contenedor}>
                     <TouchableOpacity style={styles.buttonOpen} onPress={() => navigation.navigate('AperturaCaja')}>
-                        <Text style={styles.buttonText}>Apertura de Caja</Text>
+                        <Text style={styles.buttonText1}>Apertura de Caja</Text>
                     </TouchableOpacity>
                 </View>
                 <View style={styles.contenedor2}>
@@ -127,7 +105,7 @@ export default function CajaScreen() {
                         }}
                         disabled={!isCajaAbierta}
                     >
-                        <Text style={styles.buttonText}>Cierre de Caja</Text>
+                        <Text style={styles.buttonText1}>Cierre de Caja</Text>
                     </TouchableOpacity>
                 </View>
                 
@@ -138,17 +116,33 @@ export default function CajaScreen() {
                             <Row
                                 key={index}
                                 data={[
-                                    ...fila,
-                                    <View key={index} style={{ flexDirection: 'row' }}>
+                                    fila.id, 
+                                    fila.fecha_apertura,
+                                    fila.fecha_cierre,
+                                    fila.monto_inicial,
+                                    fila.monto_recaudado,
+                                    fila.monto_total,
+                                    <View style={{ flexDirection: 'row' }}>
                                         <TouchableOpacity
-                                            style={styles.buttonModify}
-                                            onPress={() => navigation.navigate('Modificar', { id: fila[0] })}
+                                            style={[styles.buttonModify, !isCajaAbierta && styles.buttonDisabled]} 
+                                            onPress={() => {
+                                                if (!isCajaAbierta) {
+                                                    navigation.navigate('Modificar', {
+                                                        montoInicial: fila.monto_inicial, 
+                                                        montoRecaudado: fila.monto_recaudado, 
+                                                        id: fila.firebaseId
+                                                    });
+                                                } else {
+                                                    Alert.alert("Advertencia", "Debe cerrar la caja primero.");
+                                                }
+                                            }}
+                                            disabled={isCajaAbierta}
                                         >
                                             <Text style={styles.buttonText}>Modificar</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity
                                             style={styles.buttonDelete}
-                                            onPress={() => confirmarEliminar(fila[0])}
+                                            onPress={() => confirmarEliminar(fila.firebaseId)}
                                         >
                                             <Text style={styles.buttonText}>Eliminar</Text>
                                         </TouchableOpacity>
@@ -163,7 +157,7 @@ export default function CajaScreen() {
 
                 <View style={styles.contenedor2}>
                     <TouchableOpacity style={styles.buttonCerrar} onPress={() => navigation.navigate('CierreSesion')}>
-                        <Text style={styles.buttonText}>Cerrar Sesión</Text>
+                        <Text style={styles.buttonText1}>Cerrar Sesión</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -172,85 +166,6 @@ export default function CajaScreen() {
 }
 
 const styles = StyleSheet.create({
-  fondo: {
-    flex: 1,
-  },
-  encabezado: {
-    padding: 20,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    alignItems: 'center',
-  },
-  titulo: {
-    fontSize: 24,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  scroll: {
-    flex: 1,
-  },
-  contenedor: {
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  buttonOpen: {
-    backgroundColor: 'blue',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-  },
-  buttonClose: {
-    backgroundColor: 'green',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-  },
-  buttonDisabled: {
-    backgroundColor: 'gray',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-  },
-  contenedor2: {
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  contenedor3: {
-    padding: 10,
-  },
-  encabezado2: {
-    height: 40,
-    backgroundColor: '#f1f8ff',
-  },
-  textoEncabezado: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  fondo2: {
-    height: 50,
-    backgroundColor: '#fff',
-  },
-  textoFila: {
-    textAlign: 'center',
-  },
-  buttonModify: {
-    backgroundColor: 'orange',
-    padding: 5,
-    borderRadius: 5,
-    marginHorizontal: 5,
-  },
-  buttonDelete: {
-    backgroundColor: 'red',
-    padding: 5,
-    borderRadius: 5,
-  },
-  buttonCerrar: {
-    backgroundColor: 'purple',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-  },
-
     fondo: { flex: 1 },
     encabezado: {
         height: 60,
@@ -263,14 +178,8 @@ const styles = StyleSheet.create({
         color: 'black',
         fontWeight: 'bold',
     },
-    scroll: {
-        flex: 1,
-    },
-    contenedor: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 10,
-    },
+    scroll: { flex: 1 },
+    contenedor: { justifyContent: 'center', alignItems: 'center', marginTop: 10 },
     buttonOpen: {
         backgroundColor: 'green',
         alignItems: 'center',
@@ -310,19 +219,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginTop: 50,
     },
-    buttonText: {
-        color: 'white',
-        fontSize: 12,
-        fontWeight: 'bold',
-    },
-    contenedor2: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 10,
-    },
-    contenedor3: { padding: 16, paddingTop: 30 },
-    encabezado2: { height: 40, backgroundColor: 'violet' },
-    textoEncabezado: { fontSize: 10, textAlign: 'center', fontWeight: 'bold' },
-    textoFila: { textAlign: 'center' },
+    buttonDisabled: { backgroundColor: 'gray' },
+    buttonText: { color: 'white', fontSize: 6, fontWeight: 'bold' },
+    buttonText1: { color: 'white', fontSize: 15, fontWeight: 'bold' },
+    contenedor2: { justifyContent: 'center', alignItems: 'center', marginTop: 10 },
+    contenedor3: { padding: 1, paddingTop: 30 },
+    encabezado2: { height: 50, backgroundColor: 'violet' },
+    textoEncabezado: { fontSize: 8, textAlign: 'center', fontWeight: 'bold' },
+    textoFila: { textAlign: 'center', fontSize: 12 },
     fondo2: { backgroundColor: 'white' },
 });

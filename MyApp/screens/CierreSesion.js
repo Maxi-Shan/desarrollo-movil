@@ -40,7 +40,7 @@ export default function CierreSesion() {
         </View>
 
         <View style={styles.containerBoton}>
-          <TouchableOpacity style={styles.cajaBoton2} onPress={() => navigation.navigate('Caja')}>
+          <TouchableOpacity style={styles.cajaBoton2} onPress={() => navigation.navigate('WelcomeScreen')}>
             <Text style={styles.textoBoton}>Cancelar</Text>
           </TouchableOpacity>
         </View>

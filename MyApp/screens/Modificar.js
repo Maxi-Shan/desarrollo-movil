@@ -1,17 +1,15 @@
-import { StatusBar } from 'expo-status-bar'; 
+import { StatusBar } from 'expo-status-bar';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ImageBackground, StyleSheet, Alert } from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { db } from '../firebaseConfig'; // Asegúrate de importar tu configuración de Firebase
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 
-const Modificar = ({ route }) => {
-  const navigation = useNavigation();
-  const { montoInicial, montoRecaudado, id } = route.params; // Asumiendo que pasas los parámetros necesarios
-
-  const [montoInicialState, setMontoInicialState] = useState((montoInicial ?? '').toString());
-  const [montoRecaudadoState, setMontoRecaudadoState] = useState((montoRecaudado ?? '').toString());
-  const [isLoading, setIsLoading] = useState(true);
+const Modificar = ({ route, navigation }) => {
+  const { montoInicial, montoRecaudado, id } = route.params;
+  const [montoInicialState, setMontoInicialState] = useState(montoInicial.toString());
+  const [montoRecaudadoState, setMontoRecaudadoState] = useState(montoRecaudado.toString());
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleModificar = async () => {
     if (!montoInicialState.trim() || !montoRecaudadoState.trim()) {
@@ -19,17 +17,19 @@ const Modificar = ({ route }) => {
       return;
     }
 
+    if (isNaN(montoInicialState) || isNaN(montoRecaudadoState)) {
+      Alert.alert('Error', 'Los montos deben ser números válidos');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const docRef = doc(db, 'caja', id); // Usa el ID del documento recibido en los parámetros
-
-      // Crear el documento si no existe con datos iniciales
-      await setDoc(docRef, { monto: 0 }, { merge: true });
+      const docRef = doc(db, 'caja', id);
 
       // Actualizar el documento con los nuevos valores
       await updateDoc(docRef, {
-        montoInicial: Number(montoInicialState),
-        montoRecaudado: Number(montoRecaudadoState),
+        monto_inicial: Number(montoInicialState),
+        monto_recaudado: Number(montoRecaudadoState),
       });
 
       Alert.alert(
@@ -38,8 +38,8 @@ const Modificar = ({ route }) => {
         [
           {
             text: 'OK',
-            onPress: () => navigation.goBack() // Regresar a la pantalla anterior
-          }
+            onPress: () => navigation.goBack(),
+          },
         ]
       );
     } catch (error) {
@@ -56,47 +56,53 @@ const Modificar = ({ route }) => {
       style={styles.fondo}
       resizeMode="cover"
     >
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.contenedor}>
-        <View style={styles.contenedor2}>
-          <Text style={styles.label}>Monto Inicial</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Escribe el monto inicial"
-            value={montoInicialState} 
-            onChangeText={setMontoInicialState} 
-            keyboardType="numeric"
-          />
-        </View>
-        <View style={styles.contenedor2}>
-          <Text style={styles.label}>Monto Recaudado</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Escribe aquí"
-            value={montoRecaudadoState}
-            onChangeText={setMontoRecaudadoState} 
-            keyboardType="numeric"
-          />
-        </View>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.contenedor}>
+          <View style={styles.contenedor2}>
+            <Text style={styles.label}>Monto Inicial</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Escribe el monto inicial"
+              value={montoInicialState} 
+              onChangeText={setMontoInicialState} 
+              keyboardType="numeric"
+            />
+          </View>
+          <View style={styles.contenedor2}>
+            <Text style={styles.label}>Monto Recaudado</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Escribe el monto recaudado"
+              value={montoRecaudadoState}
+              onChangeText={setMontoRecaudadoState} 
+              keyboardType="numeric"
+            />
+          </View>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={[styles.boton, styles.botonVolver]}
-            onPress={() => navigation.goBack()}>
-            <Text style={styles.textoBoton}>Volver</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity 
+              style={[styles.boton, styles.botonVolver]}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.textoBoton}>Volver</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.boton, styles.botonModificar]} 
-            onPress={handleModificar}>
-            <Text style={styles.textoBoton}>Modificar</Text>
-          </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.boton, styles.botonModificar]} 
+              onPress={handleModificar}
+              disabled={isLoading} // Deshabilita el botón mientras está cargando
+            >
+              <Text style={styles.textoBoton}>
+                {isLoading ? 'Modificando...' : 'Modificar'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
     </ImageBackground>
   );
 };
+
 
 const styles = StyleSheet.create({
   fondo: {
@@ -155,7 +161,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   botonVolver: {
-    backgroundColor: 'red',
+    backgroundColor: 'black',
   },
   botonModificar: {
     backgroundColor: 'blue',
@@ -165,5 +171,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
 
 export default Modificar;
