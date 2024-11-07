@@ -30,31 +30,43 @@ export default function CajaScreen() {
             snapshot.forEach((doc) => {
                 const data = doc.data();
                 const fechaApertura = data.fecha_apertura
-                    ? new Date(data.fecha_apertura).toLocaleDateString() 
+                    ? new Date(data.fecha_apertura).toLocaleString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                    }) 
                     : '---';
-                const fechaCierre = data.fecha_cierre !== '---' 
-                    ? new Date(data.fecha_cierre).toLocaleDateString()
+                const fechaCierre = data.fecha_cierre && data.fecha_cierre !== '---'
+                    ? new Date(data.fecha_cierre).toLocaleString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                    })
                     : '---';
 
-                    nuevosDatos.push({
-                        numero_id: data.numero_id || '---',  // Mostrar el `numero_id`
-                        fecha_apertura: fechaApertura,
-                        fecha_cierre: fechaCierre,
-                        monto_inicial: data.monto_inicial || '---',
-                        monto_recaudado: data.monto_recaudado || '---',
-                        monto_total: (parseFloat(data.monto_inicial) || 0) + (parseFloat(data.monto_recaudado) || 0),
-                    });
+                nuevosDatos.push({
+                    fecha_apertura: fechaApertura,
+                    fecha_cierre: fechaCierre,
+                    monto_inicial: data.monto_inicial || '---',
+                    monto_recaudado: data.monto_recaudado || '---',
+                    monto_total: (parseFloat(data.monto_inicial) || 0) + (parseFloat(data.monto_recaudado) || 0),
+                    firebaseId: doc.id,
+                });
 
                 if (data.fecha_cierre === '---') cajaAbierta = true;
             });
 
             setIsCajaAbierta(cajaAbierta);
             setDatos(nuevosDatos);
-    } catch (error) {
-        console.error("Error al cargar datos:", error);
-        Alert.alert("Error", "No se pudieron cargar los datos");
-    }
-};
+        } catch (error) {
+            console.error("Error al cargar datos:", error);
+            Alert.alert("Error", "No se pudieron cargar los datos");
+        }
+    };
 
     const confirmarEliminar = (id) => {
         Alert.alert(
@@ -116,15 +128,15 @@ export default function CajaScreen() {
                             <Row
                                 key={index}
                                 data={[
-                                    fila.id, 
+                                    index + 1, // ID incremental
                                     fila.fecha_apertura,
                                     fila.fecha_cierre,
                                     fila.monto_inicial,
                                     fila.monto_recaudado,
                                     fila.monto_total,
-                                    <View style={{ flexDirection: 'row' }}>
+                                    <View style={styles.botonContainer}>
                                         <TouchableOpacity
-                                            style={[styles.buttonModify, !isCajaAbierta && styles.buttonDisabled]} 
+                                            style={[styles.buttonModify]} 
                                             onPress={() => {
                                                 if (!isCajaAbierta) {
                                                     navigation.navigate('Modificar', {
@@ -136,15 +148,14 @@ export default function CajaScreen() {
                                                     Alert.alert("Advertencia", "Debe cerrar la caja primero.");
                                                 }
                                             }}
-                                            disabled={isCajaAbierta}
                                         >
-                                            <Text style={styles.buttonText}>Modificar</Text>
+                                            <Text style={styles.buttonText}>M</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity
                                             style={styles.buttonDelete}
                                             onPress={() => confirmarEliminar(fila.firebaseId)}
                                         >
-                                            <Text style={styles.buttonText}>Eliminar</Text>
+                                            <Text style={styles.buttonText}>E</Text>
                                         </TouchableOpacity>
                                     </View>
                                 ]}
@@ -167,65 +178,22 @@ export default function CajaScreen() {
 
 const styles = StyleSheet.create({
     fondo: { flex: 1 },
-    encabezado: {
-        height: 60,
-        backgroundColor: '#6F1C7E', 
-        justifyContent: 'center',
-        alignItems: 'center', 
-    },
-    titulo: {
-        fontSize: 30,
-        color: 'black',
-        fontWeight: 'bold',
-    },
+    encabezado: { height: 60, backgroundColor: '#6F1C7E', justifyContent: 'center', alignItems: 'center' },
+    titulo: { fontSize: 30, color: 'black', fontWeight: 'bold' },
     scroll: { flex: 1 },
     contenedor: { justifyContent: 'center', alignItems: 'center', marginTop: 10 },
-    buttonOpen: {
-        backgroundColor: 'green',
-        alignItems: 'center',
-        padding: 15,
-        borderRadius: 10,
-        width: '90%',
-        marginVertical: 5,
-    },
-    buttonClose: {
-        backgroundColor: 'red',
-        alignItems: 'center',
-        padding: 15,
-        borderRadius: 10,
-        width: '90%',
-        marginVertical: 5,
-    },
-    buttonModify: {
-        backgroundColor: 'blue',
-        alignItems: 'center',
-        padding: 5,
-        borderRadius: 5,
-        margin: 2,
-    },
-    buttonDelete: {
-        backgroundColor: 'red',
-        alignItems: 'center',
-        padding: 5,
-        borderRadius: 5,
-        margin: 2,
-    },
-    buttonCerrar: {
-        backgroundColor: '#BA68C8',
-        padding: 15,
-        borderRadius: 10,
-        width: '90%',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 50,
-    },
-    buttonDisabled: { backgroundColor: 'gray' },
-    buttonText: { color: 'white', fontSize: 6, fontWeight: 'bold' },
+    buttonOpen: { backgroundColor: 'green', alignItems: 'center', padding: 15, borderRadius: 10, width: '90%', marginVertical: 5 },
+    buttonClose: { backgroundColor: 'red', alignItems: 'center', padding: 15, borderRadius: 10, width: '90%', marginVertical: 5 },
+    buttonModify: { backgroundColor: 'blue', alignItems: 'center', padding: 6, borderRadius: 5, margin: 2 },
+    buttonDelete: { backgroundColor: 'red', alignItems: 'center', padding: 6, borderRadius: 5, margin: 2 },
+    buttonCerrar: { backgroundColor: '#BA68C8', padding: 15, borderRadius: 10, width: '90%', alignItems: 'center', justifyContent: 'center', marginTop: 50 },
+    buttonText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
     buttonText1: { color: 'white', fontSize: 15, fontWeight: 'bold' },
     contenedor2: { justifyContent: 'center', alignItems: 'center', marginTop: 10 },
-    contenedor3: { padding: 1, paddingTop: 30 },
-    encabezado2: { height: 50, backgroundColor: 'violet' },
-    textoEncabezado: { fontSize: 8, textAlign: 'center', fontWeight: 'bold' },
-    textoFila: { textAlign: 'center', fontSize: 12 },
+    contenedor3: { padding: 16, paddingTop: 30 },
+    encabezado2: { height: 40, backgroundColor: 'violet' },
+    textoEncabezado: { fontSize: 10, textAlign: 'center', fontWeight: 'bold' },
+    textoFila: { textAlign: 'center' },
     fondo2: { backgroundColor: 'white' },
+    botonContainer: { flexDirection: 'row', justifyContent: 'center' },
 });
